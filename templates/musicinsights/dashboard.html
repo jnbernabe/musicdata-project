@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+
+<p>Total tracks: {{ total_tracks }}</p>
+
+<h3>Top Artists</h3>
+<table>
+  <tr><th>Artist</th><th>Count</th></tr>
+  {% for name, count in top_artists %}
+    <tr><td>{{ name }}</td><td>{{ count }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Tracks per month</h3>
+<canvas id="monthlyChart"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ monthly_labels|safe }},
+        datasets: [{
+            label: 'Tracks added',
+            data: {{ monthly_values|safe }},
+        }]
+    },
+});
+</script>
+
+<h3>Top Tracks</h3>
+<table>
+  <tr><th>Track</th><th>Count</th></tr>
+  {% for name, count in top_tracks %}
+    <tr><td>{{ name }}</td><td>{{ count }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Top Playlists</h3>
+<table>
+  <tr><th>Playlist</th><th>Count</th></tr>
+  {% for name, count in top_playlists %}
+    <tr><td>{{ name }}</td><td>{{ count }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Recommendations</h3>
+<ul>
+  {% for rec in recommendations %}
+    <li>{{ rec }}</li>
+  {% empty %}
+    <li>No recommendations yet.</li>
+  {% endfor %}
+</ul>
+
+{% endblock %}
