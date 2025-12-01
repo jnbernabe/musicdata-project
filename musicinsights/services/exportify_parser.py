@@ -68,6 +68,18 @@ def _parse_csv(upload_obj: Upload):
             defaults={'name': album_name}
         )
 
+        # Audio features
+        danceability = row.get('Danceability')
+        energy = row.get('Energy')
+        valence = row.get('Valence')
+        acousticness = row.get('Acousticness')
+        instrumentalness = row.get('Instrumentalness')
+        liveness = row.get('Liveness')
+        speechiness = row.get('Speechiness')
+        tempo = row.get('Tempo')
+        popularity = row.get('Popularity')
+        release_date = row.get('Release Date')
+
         # --- track
         # track_uri is a good unique key, but if missing, fall back to name + album
         spotify_id = track_uri or f"{track_name}-{album_name}"
@@ -77,7 +89,17 @@ def _parse_csv(upload_obj: Upload):
                 'name': track_name,
                 'duration_ms': int(duration_ms) if duration_ms else None,
                 'album': album_obj,
-                'genres': genres
+                'genres': genres,
+                'danceability': float(danceability) if danceability else None,
+                'energy': float(energy) if energy else None,
+                'valence': float(valence) if valence else None,
+                'acousticness': float(acousticness) if acousticness else None,
+                'instrumentalness': float(instrumentalness) if instrumentalness else None,
+                'liveness': float(liveness) if liveness else None,
+                'speechiness': float(speechiness) if speechiness else None,
+                'tempo': float(tempo) if tempo else None,
+                'popularity': int(popularity) if popularity else None,
+                'release_date': release_date
             }
         )
 
@@ -92,6 +114,21 @@ def _parse_csv(upload_obj: Upload):
         if genres and track_obj.genres != genres:
             track_obj.genres = genres
             changed = True
+        
+        # Update audio features if they exist in CSV but not in DB (or changed)
+        if danceability and track_obj.danceability != float(danceability):
+            track_obj.danceability = float(danceability)
+            changed = True
+        if energy and track_obj.energy != float(energy):
+            track_obj.energy = float(energy)
+            changed = True
+        if valence and track_obj.valence != float(valence):
+            track_obj.valence = float(valence)
+            changed = True
+        if popularity and track_obj.popularity != int(popularity):
+            track_obj.popularity = int(popularity)
+            changed = True
+            
         if changed:
             track_obj.save()
 

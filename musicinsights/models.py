@@ -33,6 +33,18 @@ class Track(models.Model):
     artists = models.ManyToManyField(Artist, related_name='tracks')
     genres = models.TextField(null=True, blank=True)
 
+    # Audio Features
+    danceability = models.FloatField(null=True, blank=True)
+    energy = models.FloatField(null=True, blank=True)
+    valence = models.FloatField(null=True, blank=True)
+    acousticness = models.FloatField(null=True, blank=True)
+    instrumentalness = models.FloatField(null=True, blank=True)
+    liveness = models.FloatField(null=True, blank=True)
+    speechiness = models.FloatField(null=True, blank=True)
+    tempo = models.FloatField(null=True, blank=True)
+    popularity = models.IntegerField(null=True, blank=True)
+    release_date = models.CharField(max_length=20, null=True, blank=True)
+
     def __str__(self):
         return self.name
 

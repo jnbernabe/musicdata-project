@@ -1,10 +1,16 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Upload your Exportify JSON</h2>
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  <input type="file" name="file" accept=".csv" required>
-  <button type="submit">Upload</button>
-</form>
-<p>After upload, you'll be redirected to your dashboard.</p>
+<div class="card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+  <h2>Upload your Exportify CSV</h2>
+  <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+    Export your playlists from <a href="https://exportify.net/" target="_blank">Exportify</a> and drop the CSV here.
+  </p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="file" accept=".csv" required>
+    <button type="submit" class="btn">Analyze</button>
+  </form>
+</div>
 {% endblock %}

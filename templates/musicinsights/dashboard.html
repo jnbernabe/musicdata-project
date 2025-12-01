@@ -1,58 +1,218 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Dashboard</h2>
 
-<p>Total tracks: {{ total_tracks }}</p>
+<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+  <div>
+    <h2>Dashboard</h2>
+    <p class="text-secondary">Total tracks: <strong>{{ total_tracks }}</strong> | Listening time: <strong>{{
+        total_listening_hours }}h</strong></p>
+  </div>
+  <a href="{% url 'upload_file' %}" class="btn">Upload New CSV</a>
+</div>
 
-<h3>Top Artists</h3>
-<table>
-  <tr><th>Artist</th><th>Count</th></tr>
-  {% for name, count in top_artists %}
-    <tr><td>{{ name }}</td><td>{{ count }}</td></tr>
-  {% endfor %}
-</table>
+<div class="dashboard-grid">
+  <!-- Recommendations at the top -->
+  <div class="card full-width">
+    <h3>✨ Personalized Insights</h3>
+    <ul class="recommendations-list">
+      {% for rec in recommendations %}
+      <li>{{ rec }}</li>
+      {% empty %}
+      <li>No recommendations yet. Keep listening!</li>
+      {% endfor %}
+    </ul>
+  </div>
 
-<h3>Tracks per month</h3>
-<canvas id="monthlyChart"></canvas>
+  <!-- Listening Time per Month -->
+  <div class="card full-width">
+    <h3>Listening Time per Month (hours)</h3>
+    <canvas id="monthlyChart"></canvas>
+  </div>
+
+  <!-- Audio Features and Top Genres side by side -->
+  <div class="card">
+    <h3>Audio Features Profile</h3>
+    <canvas id="featuresChart"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Top Genres</h3>
+    <canvas id="genresChart"></canvas>
+  </div>
+
+  <!-- Top Artists -->
+  <div class="card">
+    <h3>Top Artists</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Artist</th>
+          <th>Tracks</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, count in top_artists %}
+        <tr>
+          <td>{{ name }}</td>
+          <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Top Tracks by Listening Time -->
+  <div class="card">
+    <h3>Top Tracks by Listening Time</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Track</th>
+          <th>Artist</th>
+          <th>Album</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in top_tracks %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td>{{ t.artist }}</td>
+          <td>{{ t.album }}</td>
+          <td>{{ t.listening_time_hours }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const ctx = document.getElementById('monthlyChart').getContext('2d');
-const monthlyChart = new Chart(ctx, {
-    type: 'line',
+  Chart.defaults.color = '#b3b3b3';
+  Chart.defaults.borderColor = '#282828';
+
+  // Listening Time per Month Bar Chart
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+  const monthlyChart = new Chart(ctx, {
+    type: 'bar',
     data: {
-        labels: {{ monthly_labels|safe }},
-        datasets: [{
-            label: 'Tracks added',
-            data: {{ monthly_values|safe }},
-        }]
+      labels: {{ monthly_labels| safe }},
+  datasets: [{
+    label: 'Listening Hours',
+    data: {{ monthly_values| safe }},
+    backgroundColor: '#1db954',
+    borderColor: '#1db954',
+    borderWidth: 1
+      }]
     },
-});
+  options: {
+    responsive: true,
+      plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+          title: {
+          display: true,
+            text: 'Hours',
+              color: '#b3b3b3'
+        },
+        grid: {
+          color: '#282828'
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
+    }
+  }
+  });
+
+  // Audio Features Bar Chart with Full Color Wheel
+  const ctxFeatures = document.getElementById('featuresChart').getContext('2d');
+  new Chart(ctxFeatures, {
+    type: 'bar',
+    data: {
+      labels: {{ feature_labels| safe }},
+    datasets: [{
+      label: 'Average Features',
+      data: {{ avg_features| safe }},
+    backgroundColor: [
+      '#FF6B6B',  // Red - Danceability
+      '#4ECDC4',  // Teal - Energy
+      '#FFE66D',  // Yellow - Valence
+      '#95E1D3',  // Mint - Acousticness
+      '#A8E6CF',  // Light Green - Instrumentalness
+      '#FFB6B9',  // Pink - Liveness
+      '#C7CEEA'   // Lavender - Speechiness
+    ],
+    borderColor: [
+      '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#A8E6CF', '#FFB6B9', '#C7CEEA'
+    ],
+    borderWidth: 1
+      }]
+    },
+    options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 1.0,
+        grid: {
+          color: '#282828'
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
+    }
+  }
+  });
+
+  // Top Genres Pie Chart with Full Color Wheel
+  const ctxGenres = document.getElementById('genresChart').getContext('2d');
+  new Chart(ctxGenres, {
+    type: 'pie',
+    data: {
+      labels: {{ genre_labels| safe }},
+    datasets: [{
+      data: {{ genre_values| safe }},
+    backgroundColor: [
+      '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#A8E6CF',
+      '#FFB6B9', '#C7CEEA', '#FFA07A', '#98D8C8', '#F7DC6F'
+    ],
+    borderColor: '#121212',
+    borderWidth: 2
+      }]
+    },
+    options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          color: '#b3b3b3',
+          font: {
+            size: 11
+          }
+        }
+      }
+    }
+  }
+  });
 </script>
-
-<h3>Top Tracks</h3>
-<table>
-  <tr><th>Track</th><th>Count</th></tr>
-  {% for name, count in top_tracks %}
-    <tr><td>{{ name }}</td><td>{{ count }}</td></tr>
-  {% endfor %}
-</table>
-
-<h3>Top Playlists</h3>
-<table>
-  <tr><th>Playlist</th><th>Count</th></tr>
-  {% for name, count in top_playlists %}
-    <tr><td>{{ name }}</td><td>{{ count }}</td></tr>
-  {% endfor %}
-</table>
-
-<h3>Recommendations</h3>
-<ul>
-  {% for rec in recommendations %}
-    <li>{{ rec }}</li>
-  {% empty %}
-    <li>No recommendations yet.</li>
-  {% endfor %}
-</ul>
 
 {% endblock %}
