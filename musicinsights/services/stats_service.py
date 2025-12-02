@@ -1,4 +1,5 @@
 from collections import Counter
+import json
 from ..models import PlaylistEntry
 
 def build_dashboard_context(upload):
@@ -20,6 +21,12 @@ def build_dashboard_context(upload):
     # Total listening time
     total_listening_time_ms = 0
 
+    # --- New Metrics Initialization ---
+    time_of_day_counts = {'Morning': 0, 'Afternoon': 0, 'Evening': 0, 'Night': 0}
+    era_counts = Counter()
+    popularity_counts = { '0-20': 0, '21-40': 0, '41-60': 0, '61-80': 0, '81-100': 0 }
+    tempo_counts = { '<80 BPM': 0, '80-100 BPM': 0, '100-120 BPM': 0, '120-140 BPM': 0, '>140 BPM': 0 }
+
     for e in entries:
         track = e.track
         duration_ms = track.duration_ms or 0
@@ -35,6 +42,40 @@ def build_dashboard_context(upload):
         if e.added_at:
             key = e.added_at.strftime('%Y-%m')
             monthly_listening_time[key] += duration_ms
+            
+            # Time of Day
+            h = e.added_at.hour
+            if 5 <= h <= 11: time_of_day_counts['Morning'] += 1
+            elif 12 <= h <= 17: time_of_day_counts['Afternoon'] += 1
+            elif 18 <= h <= 23: time_of_day_counts['Evening'] += 1
+            else: time_of_day_counts['Night'] += 1
+
+        # Music Era
+        if track.release_date:
+            try:
+                year = int(track.release_date[:4])
+                decade = f"{(year // 10) * 10}s"
+                era_counts[decade] += 1
+            except (ValueError, TypeError):
+                pass
+
+        # Popularity
+        if track.popularity is not None:
+            pop = track.popularity
+            if pop <= 20: popularity_counts['0-20'] += 1
+            elif pop <= 40: popularity_counts['21-40'] += 1
+            elif pop <= 60: popularity_counts['41-60'] += 1
+            elif pop <= 80: popularity_counts['61-80'] += 1
+            else: popularity_counts['81-100'] += 1
+
+        # Tempo
+        if track.tempo:
+            bpm = track.tempo
+            if bpm < 80: tempo_counts['<80 BPM'] += 1
+            elif bpm < 100: tempo_counts['80-100 BPM'] += 1
+            elif bpm < 120: tempo_counts['100-120 BPM'] += 1
+            elif bpm < 140: tempo_counts['120-140 BPM'] += 1
+            else: tempo_counts['>140 BPM'] += 1
             
         # Audio features
         for f in features:
@@ -68,6 +109,10 @@ def build_dashboard_context(upload):
     first_entry = entries.first()
     playlist_name = first_entry.playlist_name if first_entry else "Unknown Playlist"
 
+    # Prepare Era Data (Sorted)
+    sorted_eras = sorted(era_counts.keys())
+    era_values = [era_counts[e] for e in sorted_eras]
+
     return {
         "playlist_name": playlist_name,
         "total_tracks": total_tracks,
@@ -82,11 +127,28 @@ def build_dashboard_context(upload):
             }
             for t, time_ms in track_listening_time.most_common(10)
         ],
-        "monthly_labels": monthly_labels,
-        "monthly_values": monthly_values,
-        "avg_features": avg_features,
-        "feature_labels": [f.capitalize() for f in features],
-        "top_genres": genre_counter.most_common(10),
-        "genre_labels": [g[0] for g in genre_counter.most_common(10)],
-        "genre_values": [g[1] for g in genre_counter.most_common(10)],
+        "monthly_labels": json.dumps(monthly_labels),
+        "monthly_values": json.dumps(monthly_values),
+        "avg_features": json.dumps(avg_features),
+        "feature_labels": json.dumps([f.capitalize() for f in features]),
+        "top_genres": json.dumps(genre_counter.most_common(10)),
+        "genre_labels": json.dumps([g[0] for g in genre_counter.most_common(10)]),
+        "genre_values": json.dumps([g[1] for g in genre_counter.most_common(10)]),
+        
+        # New Data
+        "time_of_day_labels": json.dumps(list(time_of_day_counts.keys())),
+        "time_of_day_values": json.dumps(list(time_of_day_counts.values())),
+        "era_labels": json.dumps(sorted_eras),
+        "era_values": json.dumps(era_values),
+        "popularity_labels": json.dumps(list(popularity_counts.keys())),
+        "popularity_values": json.dumps(list(popularity_counts.values())),
+        "tempo_labels": json.dumps(list(tempo_counts.keys())),
+        "tempo_values": json.dumps(list(tempo_counts.values())),
+        
+        # Mood Map Data (Scatter Plot)
+        "mood_data": json.dumps([
+            {'x': t.valence, 'y': t.energy, 'name': t.name, 'artist': t.artists.first().name if t.artists.exists() else 'Unknown'}
+            for t in track_listening_time.keys()
+            if t.valence is not None and t.energy is not None
+        ]),
     }

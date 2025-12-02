@@ -1,49 +1,120 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
-  <div>
-    <h2>Dashboard - {{ playlist_name }}</h2>
-    <p class="text-secondary">Total tracks: <strong>{{ total_tracks }}</strong> | Total Duration: <strong>{{
-        total_listening_hours }} hours</strong></p>
+<!-- Header -->
+<div class="dashboard-header">
+  <div class="header-title">
+    <h2>{{ playlist_name }}</h2>
+    <p>Dashboard Overview</p>
   </div>
-  <a href="{% url 'upload_file' %}" class="btn">Upload New CSV</a>
+  <a href="{% url 'upload_file' %}" class="btn"><i class="ph ph-upload-simple"></i> Upload New CSV</a>
 </div>
 
-<div class="dashboard-grid">
-  <!-- Recommendations at the top -->
-  <div class="card full-width">
-    <h3>✨ Personalized Insights</h3>
-    <ul class="recommendations-list">
+<!-- Bento Grid -->
+<div class="bento-grid">
+
+  <!-- Hero Stats -->
+  <div class="bento-card col-span-1">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-music-notes card-icon"></i> Tracks</span>
+    </div>
+    <div class="stat-value">{{ total_tracks }}</div>
+    <div class="stat-sub">Total songs in library</div>
+  </div>
+
+  <div class="bento-card col-span-1">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-clock card-icon"></i> Duration</span>
+    </div>
+    <div class="stat-value">{{ total_listening_hours }}</div>
+    <div class="stat-sub">Hours of listening time</div>
+  </div>
+
+  <div class="bento-card col-span-2">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-sparkle card-icon"></i> Insights</span>
+    </div>
+    <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-secondary); font-size: 0.95rem;">
       {% for rec in recommendations %}
-      <li>{{ rec }}</li>
+      <li style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <i class="ph ph-check-circle" style="color: var(--accent-primary);"></i> {{ rec }}
+      </li>
       {% empty %}
-      <li>No recommendations yet. Keep listening!</li>
+      <li>No insights available yet.</li>
       {% endfor %}
     </ul>
   </div>
 
-  <!-- Listening Time per Month -->
-  <div class="card full-width">
-    <h3>Duration Added per Month (Hours)</h3>
-    <canvas id="monthlyChart"></canvas>
+  <!-- Mood Map (Scatter) -->
+  <div class="bento-card col-span-3 row-span-2">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-smiley card-icon"></i> Mood Map</span>
+    </div>
+    <div id="moodChart" class="chart-container"></div>
   </div>
 
-  <!-- Audio Features and Top Genres side by side -->
-  <div class="card ">
-    <h3>Audio Features Profile</h3>
-    <canvas id="featuresChart"></canvas>
+  <!-- Top Genres (Sunburst) -->
+  <div class="bento-card col-span-1 row-span-2">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-chart-pie-slice card-icon"></i> Genres</span>
+    </div>
+    <div id="genreChart" class="chart-container"></div>
   </div>
 
-  <div class="card">
-    <h3>Top Genres</h3>
-    <canvas id="genresChart"></canvas>
+  <!-- Monthly Activity (Line/Bar) -->
+  <div class="bento-card col-span-2">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-calendar card-icon"></i> Monthly Activity</span>
+    </div>
+    <div id="monthlyChart" class="chart-container"></div>
   </div>
 
-  <!-- Top Artists -->
-  <div class="card">
-    <h3>Top Artists</h3>
-    <div class="table-responsive">
+  <!-- Audio Features (Radar) -->
+  <div class="bento-card col-span-2">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-faders card-icon"></i> Audio Profile</span>
+    </div>
+    <div id="featuresChart" class="chart-container"></div>
+  </div>
+
+  <!-- Time of Day -->
+  <div class="bento-card col-span-1">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-sun card-icon"></i> Time of Day</span>
+    </div>
+    <div id="timeChart" class="chart-container"></div>
+  </div>
+
+  <!-- Era Distribution -->
+  <div class="bento-card col-span-1">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-hourglass card-icon"></i> Eras</span>
+    </div>
+    <div id="eraChart" class="chart-container"></div>
+  </div>
+
+  <!-- Popularity -->
+  <div class="bento-card col-span-1">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-trend-up card-icon"></i> Popularity</span>
+    </div>
+    <div id="popularityChart" class="chart-container"></div>
+  </div>
+
+  <!-- Tempo -->
+  <div class="bento-card col-span-1">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-metronome card-icon"></i> Tempo</span>
+    </div>
+    <div id="tempoChart" class="chart-container"></div>
+  </div>
+
+  <!-- Top Artists Table -->
+  <div class="bento-card col-span-2">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-users card-icon"></i> Top Artists</span>
+    </div>
+    <div class="table-container">
       <table>
         <thead>
           <tr>
@@ -54,7 +125,7 @@
         <tbody>
           {% for name, count in top_artists %}
           <tr>
-            <td>{{ name }}</td>
+            <td style="font-weight: 500;">{{ name }}</td>
             <td>{{ count }}</td>
           </tr>
           {% endfor %}
@@ -63,10 +134,12 @@
     </div>
   </div>
 
-  <!-- Top Tracks by Listening Time -->
-  <div class="card full-width">
-    <h3>Top Tracks by Duration</h3>
-    <div class="table-responsive">
+  <!-- Top Tracks Table -->
+  <div class="bento-card col-span-2">
+    <div class="card-header">
+      <span class="card-title"><i class="ph ph-playlist card-icon"></i> Top Tracks</span>
+    </div>
+    <div class="table-container">
       <table>
         <thead>
           <tr>
@@ -78,7 +151,7 @@
         <tbody>
           {% for t in top_tracks %}
           <tr>
-            <td>{{ t.name }}</td>
+            <td style="font-weight: 500;">{{ t.name }}</td>
             <td>{{ t.artist }}</td>
             <td>{{ t.listening_time_hours }}</td>
           </tr>
@@ -87,134 +160,272 @@
       </table>
     </div>
   </div>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  Chart.defaults.color = '#b3b3b3';
-  Chart.defaults.borderColor = '#282828';
+<script type="text/javascript">
+  // Initialize ECharts Theme
+  const theme = 'dark';
+  const bgColor = 'transparent';
+  const textColor = '#a0a0a0';
+  const accentColor = '#1DB954';
 
-  // Listening Time per Month Bar Chart
-  const ctx = document.getElementById('monthlyChart').getContext('2d');
-  const monthlyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: {{ monthly_labels| safe }},
-  datasets: [{
-    label: 'Listening Hours',
-    data: {{ monthly_values| safe }},
-    backgroundColor: '#1db954',
-    borderColor: '#1db954',
-    borderWidth: 1
-      }]
-    },
-  options: {
-    responsive: true,
-      plugins: {
-      legend: {
-        display: false
+  // Helper to init chart
+  function initChart(id) {
+    const dom = document.getElementById(id);
+    if (!dom) return null;
+    const chart = echarts.init(dom, theme, { renderer: 'canvas' });
+    window.addEventListener('resize', () => chart.resize());
+    return chart;
+  }
+
+  // Helper for No Data
+  function getNoDataOption() {
+    return {
+      title: {
+        text: 'No Data Available',
+        left: 'center',
+        top: 'center',
+        textStyle: { color: '#555', fontSize: 14, fontWeight: 'normal' }
       }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-          title: {
-          display: true,
-            text: 'Hours',
-              color: '#b3b3b3'
+    };
+  }
+
+  // --- Mood Map (Scatter) ---
+  const moodChart = initChart('moodChart');
+  const moodData = {{ mood_data| safe }};
+  if (!moodData || moodData.length === 0) {
+    moodChart.setOption(getNoDataOption());
+  } else {
+    moodChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: {
+        trigger: 'item',
+        formatter: function (params) {
+          return `<b>${params.data.name}</b><br/>${params.data.artist}<br/>Valence: ${params.data.value[0]}<br/>Energy: ${params.data.value[1]}`;
         },
-        grid: {
-          color: '#282828'
-        }
+        backgroundColor: 'rgba(20, 20, 20, 0.9)',
+        borderColor: '#333',
+        textStyle: { color: '#fff' }
       },
-      x: {
-        grid: {
-          display: false
-        }
-      }
-    }
-  }
-  });
-
-  // Audio Features Bar Chart with Full Color Wheel
-  const ctxFeatures = document.getElementById('featuresChart').getContext('2d');
-  new Chart(ctxFeatures, {
-    type: 'bar',
-    data: {
-      labels: {{ feature_labels| safe }},
-    datasets: [{
-      label: 'Average Features',
-      data: {{ avg_features| safe }},
-    backgroundColor: [
-      '#FF6B6B',  // Red - Danceability
-      '#4ECDC4',  // Teal - Energy
-      '#FFE66D',  // Yellow - Valence
-      '#95E1D3',  // Mint - Acousticness
-      '#A8E6CF',  // Light Green - Instrumentalness
-      '#FFB6B9',  // Pink - Liveness
-      '#C7CEEA'   // Lavender - Speechiness
-    ],
-    borderColor: [
-      '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#A8E6CF', '#FFB6B9', '#C7CEEA'
-    ],
-    borderWidth: 1
-      }]
-    },
-    options: {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 1.0,
-        grid: {
-          color: '#282828'
-        }
+      grid: { top: 30, right: 30, bottom: 30, left: 40, containLabel: true },
+      xAxis: {
+        name: 'Valence (Happy)',
+        nameLocation: 'middle',
+        nameGap: 25,
+        splitLine: { lineStyle: { color: '#222' } }
       },
-      x: {
-        grid: {
-          display: false
+      yAxis: {
+        name: 'Energy',
+        nameLocation: 'middle',
+        nameGap: 30,
+        splitLine: { lineStyle: { color: '#222' } }
+      },
+      series: [{
+        symbolSize: 8,
+        data: moodData.map(item => ({
+          value: [item.x, item.y],
+          name: item.name,
+          artist: item.artist
+        })),
+        type: 'scatter',
+        itemStyle: {
+          color: new echarts.graphic.RadialGradient(0.4, 0.3, 1, [
+            { offset: 0, color: '#4ECDC4' },
+            { offset: 1, color: '#1DB954' }
+          ]),
+          shadowBlur: 10,
+          shadowColor: 'rgba(29, 185, 84, 0.5)'
         }
-      }
-    }
-  }
-  });
-
-  // Top Genres Pie Chart with Full Color Wheel
-  const ctxGenres = document.getElementById('genresChart').getContext('2d');
-  new Chart(ctxGenres, {
-    type: 'pie',
-    data: {
-      labels: {{ genre_labels| safe }},
-    datasets: [{
-      data: {{ genre_values| safe }},
-    backgroundColor: [
-      '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#A8E6CF',
-      '#FFB6B9', '#C7CEEA', '#FFA07A', '#98D8C8', '#F7DC6F'
-    ],
-    borderColor: '#121212',
-    borderWidth: 2
       }]
-    },
-    options: {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'right',
-        labels: {
-          color: '#b3b3b3',
-          font: {
-            size: 11
-          }
-        }
-      }
-    }
+    });
   }
-  });
+
+  // --- Top Genres (Sunburst) ---
+  const genreChart = initChart('genreChart');
+  const rawGenreData = {{ top_genres| safe }};
+  if (!rawGenreData || rawGenreData.length === 0) {
+    genreChart.setOption(getNoDataOption());
+  } else {
+    const genreData = rawGenreData.map(g => ({ name: g[0], value: g[1] }));
+    genreChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: { trigger: 'item' },
+      series: {
+        type: 'sunburst',
+        data: genreData,
+        radius: [0, '90%'],
+        label: { rotate: 'radial', color: '#fff' },
+        itemStyle: {
+          borderRadius: 4,
+          borderWidth: 1,
+          borderColor: '#111'
+        },
+        color: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1DB954', '#A8E6CF']
+      }
+    });
+  }
+
+  // --- Monthly Activity (Bar) ---
+  const monthlyChart = initChart('monthlyChart');
+  const monthlyLabels = {{ monthly_labels| safe }};
+  const monthlyValues = {{ monthly_values| safe }};
+  if (!monthlyLabels || monthlyLabels.length === 0) {
+    monthlyChart.setOption(getNoDataOption());
+  } else {
+    monthlyChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: { trigger: 'axis' },
+      grid: { top: 20, right: 20, bottom: 20, left: 40, containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: monthlyLabels,
+        axisLine: { lineStyle: { color: '#333' } }
+      },
+      yAxis: {
+        type: 'value',
+        splitLine: { lineStyle: { color: '#222' } }
+      },
+      series: [{
+        data: monthlyValues,
+        type: 'bar',
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#1DB954' },
+            { offset: 1, color: 'rgba(29, 185, 84, 0.1)' }
+          ]),
+          borderRadius: [4, 4, 0, 0]
+        }
+      }]
+    });
+  }
+
+  // --- Audio Features (Radar) ---
+  const featuresChart = initChart('featuresChart');
+  const featureLabels = {{ feature_labels| safe }};
+  const avgFeatures = {{ avg_features| safe }};
+  // Check if all features are 0 or empty
+  if (!avgFeatures || avgFeatures.length === 0 || avgFeatures.every(v => v === 0)) {
+    featuresChart.setOption(getNoDataOption());
+  } else {
+    featuresChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: {},
+      radar: {
+        indicator: featureLabels.map(f => ({ name: f, max: 1 })),
+        splitArea: { areaStyle: { color: ['transparent'] } },
+        splitLine: { lineStyle: { color: '#333' } },
+        axisLine: { lineStyle: { color: '#333' } }
+      },
+      series: [{
+        type: 'radar',
+        data: [{
+          value: avgFeatures,
+          name: 'Average Profile',
+          areaStyle: { color: 'rgba(78, 205, 196, 0.3)' },
+          lineStyle: { color: '#4ECDC4' },
+          itemStyle: { color: '#4ECDC4' }
+        }]
+      }]
+    });
+  }
+
+  // --- Time of Day (Pie/Nightingale) ---
+  const timeChart = initChart('timeChart');
+  const timeLabels = {{ time_of_day_labels| safe }};
+  const timeValues = {{ time_of_day_values| safe }};
+
+  if (!timeValues || timeValues.every(v => v === 0)) {
+    timeChart.setOption(getNoDataOption());
+  } else {
+    // Combine labels and values
+    const data = timeLabels.map((label, index) => ({
+      name: label,
+      value: timeValues[index]
+    }));
+
+    timeChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: { trigger: 'item' },
+      series: [{
+        type: 'pie',
+        radius: [20, 80],
+        roseType: 'area',
+        itemStyle: { borderRadius: 5 },
+        data: data.map(item => {
+          let color = '#A8E6CF';
+          if (item.name === 'Morning') color = '#FFE66D';
+          if (item.name === 'Afternoon') color = '#4ECDC4';
+          if (item.name === 'Evening') color = '#FF6B6B';
+          return { ...item, itemStyle: { color: color } };
+        })
+      }]
+    });
+  }
+
+  // --- Eras (Bar) ---
+  const eraChart = initChart('eraChart');
+  const eraLabels = {{ era_labels| safe }};
+  const eraValues = {{ era_values| safe }};
+  if (!eraLabels || eraLabels.length === 0) {
+    eraChart.setOption(getNoDataOption());
+  } else {
+    eraChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: { trigger: 'axis' },
+      grid: { top: 10, right: 10, bottom: 20, left: 10, containLabel: true },
+      xAxis: { type: 'category', data: eraLabels },
+      yAxis: { type: 'value', show: false },
+      series: [{
+        data: eraValues,
+        type: 'bar',
+        itemStyle: { color: '#A8E6CF', borderRadius: 4 }
+      }]
+    });
+  }
+
+  // --- Popularity (Bar) ---
+  const popularityChart = initChart('popularityChart');
+  const popLabels = {{ popularity_labels| safe }};
+  const popValues = {{ popularity_values| safe }};
+  if (!popLabels || popLabels.length === 0) {
+    popularityChart.setOption(getNoDataOption());
+  } else {
+    popularityChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: { trigger: 'axis' },
+      grid: { top: 10, right: 10, bottom: 20, left: 10, containLabel: true },
+      xAxis: { type: 'category', data: popLabels },
+      yAxis: { type: 'value', show: false },
+      series: [{
+        data: popValues,
+        type: 'bar',
+        itemStyle: { color: '#FFE66D', borderRadius: 4 }
+      }]
+    });
+  }
+
+  // --- Tempo (Bar) ---
+  const tempoChart = initChart('tempoChart');
+  const tempoLabels = {{ tempo_labels| safe }};
+  const tempoValues = {{ tempo_values| safe }};
+  if (!tempoLabels || tempoLabels.length === 0) {
+    tempoChart.setOption(getNoDataOption());
+  } else {
+    tempoChart.setOption({
+      backgroundColor: bgColor,
+      tooltip: { trigger: 'axis' },
+      grid: { top: 10, right: 10, bottom: 20, left: 10, containLabel: true },
+      xAxis: { type: 'category', data: tempoLabels },
+      yAxis: { type: 'value', show: false },
+      series: [{
+        data: tempoValues,
+        type: 'bar',
+        itemStyle: { color: '#FF6B6B', borderRadius: 4 }
+      }]
+    });
+  }
+
 </script>
 
 {% endblock %}

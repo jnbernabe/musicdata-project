@@ -145,6 +145,24 @@ def _parse_csv(upload_obj: Upload):
         if popularity and track_obj.popularity != _safe_int(popularity):
             track_obj.popularity = _safe_int(popularity)
             changed = True
+        if tempo and track_obj.tempo != _safe_float(tempo):
+            track_obj.tempo = _safe_float(tempo)
+            changed = True
+        if release_date and track_obj.release_date != release_date:
+            track_obj.release_date = release_date
+            changed = True
+        if acousticness and track_obj.acousticness != _safe_float(acousticness):
+            track_obj.acousticness = _safe_float(acousticness)
+            changed = True
+        if instrumentalness and track_obj.instrumentalness != _safe_float(instrumentalness):
+            track_obj.instrumentalness = _safe_float(instrumentalness)
+            changed = True
+        if liveness and track_obj.liveness != _safe_float(liveness):
+            track_obj.liveness = _safe_float(liveness)
+            changed = True
+        if speechiness and track_obj.speechiness != _safe_float(speechiness):
+            track_obj.speechiness = _safe_float(speechiness)
+            changed = True
             
         if changed:
             track_obj.save()

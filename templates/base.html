@@ -8,18 +8,49 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     {% load static %}
     <link rel="stylesheet" href="{% static 'musicinsights/css/style.css' %}">
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <h1><a href="/" style="color: var(--text-primary); text-decoration: none;">Music Insights</a></h1>
-        </header>
-        {% block content %}
-        {% endblock %}
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="ph ph-music-notes-simple"></i>
+                <h1>Music Insights</h1>
+            </div>
+            <nav>
+                <a href="/" class="nav-item active"><i class="ph ph-squares-four"></i> Dashboard</a>
+                <a href="{% url 'upload_file' %}" class="nav-item"><i class="ph ph-upload-simple"></i> Upload</a>
+                <a href="#" class="nav-item"><i class="ph ph-gear"></i> Settings</a>
+
+                <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+                    <p
+                        style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; padding-left: 1rem;">
+                        History</p>
+                    {% for dash in recent_uploads %}
+                    <a href="{% url 'dashboard' dash.id %}"
+                        class="nav-item {% if request.resolver_match.kwargs.upload_id == dash.id %}active{% endif %}">
+                        <i class="ph ph-clock-counter-clockwise"></i>
+                        <span
+                            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{dash.name}}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}
+            {% endblock %}
+        </main>
     </div>
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 </body>
 
 </html>
