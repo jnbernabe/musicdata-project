@@ -1,83 +1,108 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="upload-container">
-    <div class="header-title" style="margin-bottom: 2rem;">
-        <h2>Upload Data</h2>
-        <p>Import your Spotify listening history</p>
+  <div class="header-title" style="margin-bottom: 2rem">
+    <h1 style="font-size: 4rem">Upload Data</h1>
+    <p style="color: var(--text-muted); font-size: 0.9rem">
+      Import your Spotify listening history
+    </p>
+    <p style="color: var(--text-muted); font-size: 0.9rem">
+      Supports
+      <a
+        href="https://exportify.net/"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color: var(--accent-primary)"
+        >Exportify</a
+      >
+      CSV format
+    </p>
+  </div>
+
+  {% if error %}
+  <div
+    style="
+      background-color: rgba(255, 68, 68, 0.1);
+      color: #ff4444;
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 68, 68, 0.2);
+    "
+  >
+    <i
+      class="ph ph-warning-circle"
+      style="vertical-align: middle; margin-right: 8px"
+    ></i>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" id="uploadForm">
+    {% csrf_token %}
+    <input
+      type="file"
+      name="file"
+      id="fileInput"
+      accept=".csv"
+      style="display: none"
+      required
+    />
+
+    <div class="upload-zone" id="uploadZone">
+      <i class="ph ph-upload-simple upload-icon"></i>
+      <div class="upload-text">
+        <h3>Drop your CSV here</h3>
+        <p>or click to browse files</p>
+      </div>
     </div>
-
-    {% if error %}
-    <div
-        style="background-color: rgba(255, 68, 68, 0.1); color: #ff4444; padding: 1rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid rgba(255, 68, 68, 0.2);">
-        <i class="ph ph-warning-circle" style="vertical-align: middle; margin-right: 8px;"></i>
-        {{ error }}
-    </div>
-    {% endif %}
-
-    <form method="post" enctype="multipart/form-data" id="uploadForm">
-        {% csrf_token %}
-        <input type="file" name="file" id="fileInput" accept=".csv" style="display: none;" required>
-
-        <div class="upload-zone" id="uploadZone">
-            <i class="ph ph-upload-simple upload-icon"></i>
-            <div class="upload-text">
-                <h3>Drop your CSV here</h3>
-                <p>or click to browse files</p>
-            </div>
-        </div>
-    </form>
-
-    <div style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
-        <p>Supports Exportify CSV format</p>
-    </div>
+  </form>
 </div>
 
 <!-- Loading Overlay -->
 <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-    <div class="loading-text">Processing your music data...</div>
+  <div class="spinner"></div>
+  <div class="loading-text">Processing your music data...</div>
 </div>
 
 <script>
-    const uploadZone = document.getElementById('uploadZone');
-    const fileInput = document.getElementById('fileInput');
-    const uploadForm = document.getElementById('uploadForm');
-    const loadingOverlay = document.getElementById('loadingOverlay');
+  const uploadZone = document.getElementById("uploadZone");
+  const fileInput = document.getElementById("fileInput");
+  const uploadForm = document.getElementById("uploadForm");
+  const loadingOverlay = document.getElementById("loadingOverlay");
 
-    // Trigger file input on click
-    uploadZone.addEventListener('click', () => fileInput.click());
+  // Trigger file input on click
+  uploadZone.addEventListener("click", () => fileInput.click());
 
-    // Handle file selection
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            submitForm();
-        }
-    });
-
-    // Drag and Drop events
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
-
-    uploadZone.addEventListener('dragleave', () => {
-        uploadZone.classList.remove('dragover');
-    });
-
-    uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-
-        if (e.dataTransfer.files.length > 0) {
-            fileInput.files = e.dataTransfer.files;
-            submitForm();
-        }
-    });
-
-    function submitForm() {
-        loadingOverlay.classList.add('active');
-        uploadForm.submit();
+  // Handle file selection
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      submitForm();
     }
+  });
+
+  // Drag and Drop events
+  uploadZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadZone.classList.add("dragover");
+  });
+
+  uploadZone.addEventListener("dragleave", () => {
+    uploadZone.classList.remove("dragover");
+  });
+
+  uploadZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove("dragover");
+
+    if (e.dataTransfer.files.length > 0) {
+      fileInput.files = e.dataTransfer.files;
+      submitForm();
+    }
+  });
+
+  function submitForm() {
+    loadingOverlay.classList.add("active");
+    uploadForm.submit();
+  }
 </script>
 {% endblock %}

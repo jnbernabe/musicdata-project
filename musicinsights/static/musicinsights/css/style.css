@@ -439,3 +439,17 @@ tr:last-child td {
         opacity: 1;
     }
 }
+
+/* History Item Expansion */
+.history-item-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.nav-item:hover .history-item-name {
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
+}

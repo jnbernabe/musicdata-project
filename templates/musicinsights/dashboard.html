@@ -219,6 +219,15 @@
       fontFamily: 'Inter, sans-serif'
   };
 
+  // --- Color Palette ---
+  const colorPalette = [
+    '#D32F2F', '#00897B', '#FBC02D', '#1B5E20', '#455A64',
+    '#7B1FA2', '#0288D1', '#E64A19', '#512DA8', '#C2185B',
+    '#388E3C', '#F57F17', '#0277BD', '#BF360C', '#6A1B9A',
+    '#689F38', '#AD1457', '#00695C', '#FF8F00', '#4A148C',
+    '#004D40', '#D84315', '#006064', '#880E4F', '#33691E'
+  ];
+
   // Helper to init chart
   function initChart(id) {
     const dom = document.getElementById(id);
@@ -277,20 +286,17 @@
         },
         series: [{
           symbolSize: 8,
-          data: moodData.map(item => ({
+          data: moodData.map((item, index) => ({
             value: [item.x, item.y],
             name: item.name,
-            artist: item.artist
+            artist: item.artist,
+            itemStyle: {
+              color: colorPalette[index % colorPalette.length],
+              shadowBlur: 10,
+              shadowColor: colorPalette[index % colorPalette.length]
+            }
           })),
-          type: 'scatter',
-          itemStyle: {
-            color: new echarts.graphic.RadialGradient(0.4, 0.3, 1, [
-              { offset: 0, color: '#4ECDC4' },
-              { offset: 1, color: '#1DB954' }
-            ]),
-            shadowBlur: 10,
-            shadowColor: 'rgba(29, 185, 84, 0.5)'
-          }
+          type: 'scatter'
         }]
       });
     }
@@ -317,7 +323,7 @@
             borderWidth: 1,
             borderColor: '#111'
           },
-          color: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#1DB954', '#A8E6CF']
+          color: colorPalette
         }
       });
     }
@@ -392,9 +398,9 @@
           data: [{
             value: avgFeatures,
             name: 'Average Profile',
-            areaStyle: { color: 'rgba(78, 205, 196, 0.3)' },
-            lineStyle: { color: '#4ECDC4' },
-            itemStyle: { color: '#4ECDC4' }
+            areaStyle: { color: colorPalette[1] + '4D' },
+            lineStyle: { color: colorPalette[1] },
+            itemStyle: { color: colorPalette[1] }
           }]
         }]
       });
@@ -451,9 +457,11 @@
         xAxis: { type: 'category', data: eraLabels, axisLabel: axisLabelStyle },
         yAxis: { type: 'value', show: false },
         series: [{
-          data: eraValues,
-          type: 'bar',
-          itemStyle: { color: '#A8E6CF', borderRadius: 4 }
+          data: eraValues.map((val, idx) => ({
+            value: val,
+            itemStyle: { color: colorPalette[idx % colorPalette.length], borderRadius: 4 }
+          })),
+          type: 'bar'
         }]
       });
     }
@@ -474,9 +482,11 @@
         xAxis: { type: 'category', data: popLabels, axisLabel: axisLabelStyle },
         yAxis: { type: 'value', show: false },
         series: [{
-          data: popValues,
-          type: 'bar',
-          itemStyle: { color: '#FFE66D', borderRadius: 4 }
+          data: popValues.map((val, idx) => ({
+            value: val,
+            itemStyle: { color: colorPalette[idx % colorPalette.length], borderRadius: 4 }
+          })),
+          type: 'bar'
         }]
       });
     }
@@ -497,9 +507,11 @@
         xAxis: { type: 'category', data: tempoLabels, axisLabel: axisLabelStyle },
         yAxis: { type: 'value', show: false },
         series: [{
-          data: tempoValues,
-          type: 'bar',
-          itemStyle: { color: '#FF6B6B', borderRadius: 4 }
+          data: tempoValues.map((val, idx) => ({
+            value: val,
+            itemStyle: { color: colorPalette[idx % colorPalette.length], borderRadius: 4 }
+          })),
+          type: 'bar'
         }]
       });
     }

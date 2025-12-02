@@ -1,30 +1,37 @@
 from collections import Counter
-from ..models import PlaylistEntry
+from datetime import datetime
 
-def build_recommendations(upload):
-    entries = PlaylistEntry.objects.filter(upload=upload).select_related('track')
+def build_recommendations(playlist_data):
+    entries = playlist_data
     artist_counter = Counter()
     genre_counter = Counter()
     time_of_day_counter = Counter()
     total_listening_time_ms = 0
-    track_count = entries.count()
+    track_count = len(entries)
 
     for e in entries:
-        track = e.track
-        duration_ms = track.duration_ms or 0
+        track = e['track']
+        duration_ms = track.get('duration_ms') or 0
         total_listening_time_ms += duration_ms
         
-        for artist in track.artists.all():
-            artist_counter[artist.name] += 1
+        for artist in track['artists']:
+            artist_counter[artist] += 1
             
-        if track.genres:
-            for g in track.genres.split(','):
-                g_clean = g.strip()
-                if g_clean:
-                    genre_counter[g_clean] += 1
+        for g in track.get('genres', []):
+            genre_counter[g] += 1
                     
-        if e.added_at:
-            time_of_day_counter[e.added_at.hour] += 1
+        added_at_str = e.get('added_at')
+        if added_at_str:
+            try:
+                if 'T' in added_at_str:
+                     dt = datetime.fromisoformat(added_at_str.replace('Z', '+00:00'))
+                else:
+                     dt = None
+                
+                if dt:
+                    time_of_day_counter[dt.hour] += 1
+            except ValueError:
+                pass
 
     recs = []
 
@@ -36,9 +43,9 @@ def build_recommendations(upload):
     # Top artist recommendation
     if artist_counter:
         top_artist, top_count = artist_counter.most_common(1)[0]
-        percentage = round((top_count / track_count) * 100, 1)
+        percentage = round((top_count / track_count) * 100, 1) if track_count > 0 else 0
         if percentage >= 15:
-            recs.append(f"🎤 {top_artist} makes up {percentage}% of your library. Consider exploring their deep cuts and B-sides.")
+            recs.append(f"🎤 {top_artist} makes up {percentage}% of your playlist. Consider exploring their deep cuts and B-sides.")
         elif top_count >= 5:
             recs.append(f"🎸 You're a fan of {top_artist}. Check out similar artists in the same genre.")
     
@@ -66,14 +73,14 @@ def build_recommendations(upload):
         recs.append("🌃 Late night listener! Your nocturnal sessions deserve a dedicated chill playlist.")
     
     # Energy-based recommendation (if we have audio features)
-    high_energy_tracks = sum(1 for e in entries if e.track.energy and e.track.energy > 0.7)
+    high_energy_tracks = sum(1 for e in entries if e['track'].get('energy') and e['track']['energy'] > 0.7)
     if high_energy_tracks > track_count * 0.6:
         recs.append("⚡ Your library is high-energy! Balance it out with some mellow tracks for variety.")
     elif high_energy_tracks < track_count * 0.3:
         recs.append("😌 You prefer chill vibes. Add some upbeat tracks for when you need a boost.")
 
     # Tempo-based recommendation
-    total_tempo = sum(e.track.tempo for e in entries if e.track.tempo)
+    total_tempo = sum(e['track']['tempo'] for e in entries if e['track'].get('tempo'))
     avg_tempo = total_tempo / track_count if track_count > 0 else 0
     if avg_tempo > 120:
         recs.append("🏃‍♂️ High Tempo! Great for workouts.")
